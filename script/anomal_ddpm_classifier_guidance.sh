@@ -13,10 +13,7 @@ file_name="from_trained_pe_local_global_from_pretrained_vae_global_matching"
 anomal_source_path="../../../MyData/anomal_source"
 network_weights="../../result/${bench_mark}/${obj_name}/${layer_name}/${sub_folder}/local_all_crossattn_pe/models/epoch-000009.safetensors" \
 
-accelerate launch --config_file ../../../gpu_config/gpu_0_config \
- --main_process_port $port_number ../anomal_ddpm_classifier_guidance.py
-
- --log_with wandb \
+python --main_process_port $port_number ../anomal_ddpm_classifier_guidance.py
  --output_dir "../../result/${bench_mark}/${obj_name}/${layer_name}/${sub_folder}/${file_name}" \
  --train_unet --train_text_encoder --start_epoch 0 --max_train_epochs 30 \
  --pretrained_model_name_or_path ../../../pretrained_stable_diffusion/stable-diffusion-v1-5/v1-5-pruned.safetensors \
