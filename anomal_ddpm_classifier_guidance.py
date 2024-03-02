@@ -44,7 +44,7 @@ def main(args):
     for epoch in range(n_epochs):
         model.train()
         epoch_loss = 0
-        images = torch.randn(1,3,256,256)
+        images = torch.randn(1,3,256,256).to(device)
         optimizer.zero_grad(set_to_none=True)
         timesteps = torch.randint(0, 1000, (len(images),)).to(device)  # pick a random time step t
         with autocast(enabled=True):
