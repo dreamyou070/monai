@@ -52,6 +52,7 @@ def main(args):
             # Get model prediction
             noise_pred = inferer(inputs=images, diffusion_model=model, noise=noise, timesteps=timesteps)
             loss = F.mse_loss(noise_pred.float(), noise.float())
+            print(f'loss = {loss}')
         scaler.scale(loss).backward()
         scaler.step(optimizer)
         scaler.update()
