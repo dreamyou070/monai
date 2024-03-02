@@ -74,7 +74,6 @@ if __name__ == '__main__' :
     parser.add_argument('--trigger_word', type=str)
     parser.add_argument("--anomal_only_on_object", action='store_true')
     parser.add_argument("--latent_res", type=int, default=64)
-    parser.add_argument("--anomal_only_on_object", action='store_true')
     parser.add_argument("--do_anomal_sample", action='store_true')
     parser.add_argument("--do_object_detection", action='store_true')
     parser.add_argument('--batch_size', type=int, default=1)
