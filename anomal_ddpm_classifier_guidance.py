@@ -45,7 +45,7 @@ def main(args):
     val_epoch_loss_list = []
     scaler = GradScaler()
     total_start = time.time()
-    for epoch in range(n_epochs):
+    for epoch in range(args.start_epoch, args.max_train_epochs + args.start_epoch):
         model.train()
         epoch_loss = 0
         images = torch.randn(1,3,256,256).to(device)
@@ -93,7 +93,8 @@ if __name__ == '__main__' :
     parser.add_argument("--do_rot_augment", action='store_true')
     parser.add_argument("--anomal_trg_beta", type=float)
     parser.add_argument("--back_trg_beta", type=float)
-
+    parser.add_argument("--start_epoch", type=int, default=0)
+    parser.add_argument("--max_train_epochs", type=int, default=None, )
     args = parser.parse_args()
     passing_mvtec_argument(args)
     main(args)

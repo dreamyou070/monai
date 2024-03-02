@@ -15,7 +15,7 @@ network_weights="../../result/${bench_mark}/${obj_name}/${layer_name}/${sub_fold
 
 python ../anomal_ddpm_classifier_guidance.py \
  --output_dir "../../result/${bench_mark}/${obj_name}/${layer_name}/${sub_folder}/${file_name}" \
- --train_unet --train_text_encoder --start_epoch 0 --max_train_epochs 30 \
+ --start_epoch 0 --max_train_epochs 30 \
  --pretrained_model_name_or_path ../../../pretrained_stable_diffusion/stable-diffusion-v1-5/v1-5-pruned.safetensors \
  --data_path "../../../MyData/anomaly_detection/${bench_mark}" \
  --network_weights ${network_weights} \
