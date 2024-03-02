@@ -22,9 +22,9 @@ def main() :
 
     print(f' step 1. make model')
     device = torch.device("cuda")
-    model = DiffusionModelUNet(spatial_dims=256,
-                               in_channels=3,
-                               out_channels=3,
+    model = DiffusionModelUNet(spatial_dims=2,   # 2D Convolution
+                               in_channels=3,    # in channel
+                               out_channels=3,   # final output channel
                                num_channels=(64, 128, 128),
                                attention_levels=(False, True, True),
                                num_res_blocks=1,

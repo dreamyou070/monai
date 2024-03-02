@@ -19,9 +19,9 @@ def main(args):
 
     print(f' step 3. model and scheduler')
     device = torch.device("cuda")
-    model = DiffusionModelUNet(spatial_dims=256,
-                               in_channels=3,
-                               out_channels=1,
+    model = DiffusionModelUNet(spatial_dims=2,  # 2D Convolution
+                               in_channels=3,   # input  RGB image
+                               out_channels=3,  # output RGB image
                                num_channels=(64, 64, 64),
                                attention_levels=(False, False, True),
                                num_res_blocks=1,
@@ -44,7 +44,6 @@ def main(args):
     for epoch in range(n_epochs):
         model.train()
         epoch_loss = 0
-
         images = torch.randn(1,3,256,256)
         optimizer.zero_grad(set_to_none=True)
         timesteps = torch.randint(0, 1000, (len(images),)).to(device)  # pick a random time step t
