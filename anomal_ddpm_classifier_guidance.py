@@ -11,6 +11,7 @@ from generative.inferers import DiffusionInferer
 from generative.networks.nets.diffusion_model_unet import DiffusionModelUNet
 from generative.networks.schedulers.ddim import DDIMScheduler
 from data.mvtec import passing_mvtec_argument
+from tqdm import tqdm
 
 def main(args):
 
@@ -50,7 +51,11 @@ def main(args):
     optimizer = torch.optim.Adam(params=model.parameters(), lr=2.5e-5)
 
     print(f' step 5. Training')
+    # [0] progress bar
+    progress_bar = tqdm(range(args.max_train_steps), smoothing=0, desc="steps")
+    global_step = 0
     scaler = GradScaler()
+    loss_dict = {}
     for epoch in range(args.start_epoch, args.max_train_epochs + args.start_epoch):
         model.train()
         epoch_loss = 0
@@ -64,10 +69,15 @@ def main(args):
                 # Get model prediction
                 noise_pred = inferer(inputs=image, diffusion_model=model, noise=noise, timesteps=timesteps)
                 loss = F.mse_loss(noise_pred.float(), noise.float())
+                loss_dict['loss'] = loss
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
             epoch_loss += loss.item()
+            # [3] progress bar
+            progress_bar.update(1)
+            global_step += 1        
+            progress_bar.set_postfix(**loss_dict)
         # [2] save model per epoch
         torch.save(model.state_dict(), os.path.join(model_base_dir, f'model_{epoch+1}.pth'))
 
