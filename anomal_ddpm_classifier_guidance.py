@@ -48,19 +48,24 @@ def main(args):
     for epoch in range(args.start_epoch, args.max_train_epochs + args.start_epoch):
         model.train()
         epoch_loss = 0
-        images = torch.randn(1,3,256,256).to(device)
-        optimizer.zero_grad(set_to_none=True)
-        timesteps = torch.randint(0, 1000, (len(images),)).to(device)  # pick a random time step t
-        with autocast(enabled=True):
-            noise = torch.randn_like(images).to(device)
-            # Get model prediction
-            noise_pred = inferer(inputs=images, diffusion_model=model, noise=noise, timesteps=timesteps)
-            loss = F.mse_loss(noise_pred.float(), noise.float())
-            print(f'loss = {loss}')
-        scaler.scale(loss).backward()
-        scaler.step(optimizer)
-        scaler.update()
-        epoch_loss += loss.item()
+        for step, batch in enumerate(train_dataloader):
+
+            optimizer.zero_grad(set_to_none=True)
+            # [1] call image
+            image = batch['image'].to(device)
+            print(f'image shape (1 batch, 3, 256, 256) = {image.shape}')
+            timesteps = torch.randint(0, 1000, (len(image),)).to(device)  # pick a random time step t
+            with autocast(enabled=True):
+                noise = torch.randn_like(image).to(device)
+                # Get model prediction
+                noise_pred = inferer(inputs=image,
+                                     diffusion_model=model, noise=noise, timesteps=timesteps)
+                loss = F.mse_loss(noise_pred.float(), noise.float())
+                print(f'loss = {loss}')
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+            epoch_loss += loss.item()
 
 
 if __name__ == '__main__' :
