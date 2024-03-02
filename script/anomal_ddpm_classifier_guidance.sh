@@ -6,14 +6,12 @@ port_number=50005
 bench_mark="MVTec"
 obj_name='transistor'
 trigger_word='transistor'
-layer_name='layer_3'
-sub_folder="up_16_32_64"
-file_name="monai_trial"
+file_name="monai_trial_ddpm"
 
 anomal_source_path="../../../MyData/anomal_source"
 
 python ../anomal_ddpm_classifier_guidance.py \
- --output_dir "../../result/${bench_mark}/${obj_name}/${layer_name}/${sub_folder}/${file_name}" \
+ --output_dir "../../result/${bench_mark}/${obj_name}/${file_name}" \
  --start_epoch 0 --max_train_epochs 30 \
  --data_path "../../../MyData/anomaly_detection/${bench_mark}" \
  --trigger_word "${trigger_word}" \

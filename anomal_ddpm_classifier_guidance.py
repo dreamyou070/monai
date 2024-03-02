@@ -2,8 +2,9 @@ import argparse
 import random
 from monai.utils import set_determinism
 from data.prepare_dataset import call_dataset
-import time
+import os
 import torch
+import json
 import torch.nn.functional as F
 from torch.cuda.amp import GradScaler, autocast
 from generative.inferers import DiffusionInferer
@@ -12,6 +13,16 @@ from generative.networks.schedulers.ddim import DDIMScheduler
 from data.mvtec import passing_mvtec_argument
 
 def main(args):
+
+    print(f' step 0. base path')
+    output_dir = args.output_dir
+    os.makedirs(output_dir)
+    record_save_dir = os.path.join(output_dir, 'record')
+    os.makedirs(record_save_dir, exist_ok=True)
+    with open(os.path.join(record_save_dir, 'config.json'), 'w') as f:
+        json.dump(vars(args), f, indent=4)
+    model_base_dir = os.path.join(output_dir, 'model')
+    os.makedirs(model_base_dir, exist_ok = True)
 
     print(f' step 1. seed seed')
     if args.seed is None:
@@ -39,33 +50,26 @@ def main(args):
     optimizer = torch.optim.Adam(params=model.parameters(), lr=2.5e-5)
 
     print(f' step 5. Training')
-    n_epochs = 2000
-    val_interval = 20
-    epoch_loss_list = []
-    val_epoch_loss_list = []
     scaler = GradScaler()
-    total_start = time.time()
     for epoch in range(args.start_epoch, args.max_train_epochs + args.start_epoch):
         model.train()
         epoch_loss = 0
         for step, batch in enumerate(train_dataloader):
-
             optimizer.zero_grad(set_to_none=True)
             # [1] call image
             image = batch['image'].to(device)
-            print(f'image shape (1 batch, 3, 256, 256) = {image.shape}')
             timesteps = torch.randint(0, 1000, (len(image),)).to(device)  # pick a random time step t
             with autocast(enabled=True):
                 noise = torch.randn_like(image).to(device)
                 # Get model prediction
-                noise_pred = inferer(inputs=image,
-                                     diffusion_model=model, noise=noise, timesteps=timesteps)
+                noise_pred = inferer(inputs=image, diffusion_model=model, noise=noise, timesteps=timesteps)
                 loss = F.mse_loss(noise_pred.float(), noise.float())
-                print(f'loss = {loss}')
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
             epoch_loss += loss.item()
+        # [2] save model per epoch
+        torch.save(model.state_dict(), os.path.join(model_base_dir, f'model_{epoch+1}.pth'))
 
 
 if __name__ == '__main__' :
