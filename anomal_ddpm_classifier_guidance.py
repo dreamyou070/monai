@@ -61,5 +61,5 @@ def main(args):
 if __name__ == '__main__' :
     parser = argparse.ArgumentParser(description='Anomal DDPM')
     parser.add_argument('--seed', default=42, type=int)
-    args = parser.parse_argument()
+    args = parser.parse_args()
     main(args)
