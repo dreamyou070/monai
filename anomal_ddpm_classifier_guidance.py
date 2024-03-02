@@ -52,7 +52,8 @@ def main(args):
 
     print(f' step 5. Training')
     # [0] progress bar
-    progress_bar = tqdm(range(args.max_train_steps), smoothing=0, desc="steps")
+    max_train_steps = len(train_dataloader) * args.max_train_epochs
+    progress_bar = tqdm(range(max_train_steps), smoothing=0, desc="steps")
     global_step = 0
     scaler = GradScaler()
     loss_dict = {}
