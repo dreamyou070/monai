@@ -17,7 +17,7 @@ def main(args):
 
     print(f' step 0. base path')
     output_dir = args.output_dir
-    os.makedirs(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
     record_save_dir = os.path.join(output_dir, 'record')
     os.makedirs(record_save_dir, exist_ok=True)
     with open(os.path.join(record_save_dir, 'config.json'), 'w') as f:
@@ -76,7 +76,7 @@ def main(args):
             epoch_loss += loss.item()
             # [3] progress bar
             progress_bar.update(1)
-            global_step += 1        
+            global_step += 1
             progress_bar.set_postfix(**loss_dict)
         # [2] save model per epoch
         torch.save(model.state_dict(), os.path.join(model_base_dir, f'model_{epoch+1}.pth'))
