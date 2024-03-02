@@ -1,21 +1,25 @@
+import argparse
+import random
+from monai.utils import set_determinism
+from data.prepare_dataset import call_dataset
 import time
 import torch
 import torch.nn.functional as F
-from monai.utils import set_determinism
 from torch.cuda.amp import GradScaler, autocast
 from generative.inferers import DiffusionInferer
 from generative.networks.nets.diffusion_model_unet import DiffusionModelUNet
 from generative.networks.schedulers.ddim import DDIMScheduler
-import argparse
-
+from data.mvtec import passing_mvtec_argument
 
 def main(args):
 
     print(f' step 1. seed seed')
+    if args.seed is None:
+        args.seed = random.randint(0, 2 ** 32)
     set_determinism(args.seed)
 
-    channel = 0  # 0 = Flair
-    assert channel in [0, 1, 2, 3], "Choose a valid channel"
+    print(f' step 2. make dataset')
+    train_dataloader = call_dataset(args)
 
     print(f' step 3. model and scheduler')
     device = torch.device("cuda")
@@ -61,6 +65,36 @@ def main(args):
 
 if __name__ == '__main__' :
     parser = argparse.ArgumentParser(description='Anomal DDPM')
-    parser.add_argument('--seed', default=42, type=int)
+    # step 1. setting
+    parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument('--output_dir', type=str, default='output')
+    # step 2. dataset
+    parser.add_argument('--data_path', type=str, default=r'../../../MyData/anomaly_detection/MVTec3D-AD')
+    parser.add_argument("--anomal_source_path", type=str)
+    parser.add_argument('--trigger_word', type=str)
+    parser.add_argument("--anomal_only_on_object", action='store_true')
+    parser.add_argument("--latent_res", type=int, default=64)
+    parser.add_argument("--anomal_only_on_object", action='store_true')
+    parser.add_argument("--do_anomal_sample", action='store_true')
+    parser.add_argument("--do_object_detection", action='store_true')
+    parser.add_argument('--batch_size', type=int, default=1)
+
+    parser.add_argument("--anomal_p", type=float, default=0.04)
+    parser.add_argument('--obj_name', type=str, default='bottle')
+    parser.add_argument("--reference_check", action='store_true')
+    parser.add_argument("--use_small_anomal", action='store_true')
+    parser.add_argument("--anomal_min_perlin_scale", type=int, default=0)
+    parser.add_argument("--anomal_max_perlin_scale", type=int, default=3)
+    parser.add_argument("--anomal_min_beta_scale", type=float, default=0.5)
+    parser.add_argument("--anomal_max_beta_scale", type=float, default=0.8)
+    parser.add_argument("--back_min_perlin_scale", type=int, default=0)
+    parser.add_argument("--back_max_perlin_scale", type=int, default=3)
+    parser.add_argument("--back_min_beta_scale", type=float, default=0.6)
+    parser.add_argument("--back_max_beta_scale", type=float, default=0.9)
+    parser.add_argument("--do_rot_augment", action='store_true')
+    parser.add_argument("--anomal_trg_beta", type=float)
+    parser.add_argument("--back_trg_beta", type=float)
+
     args = parser.parse_args()
+    passing_mvtec_argument(args)
     main(args)
