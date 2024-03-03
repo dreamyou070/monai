@@ -44,7 +44,6 @@ def main(args):
                                num_head_channels=64, # what is num_head_channels?
                                with_conditioning=True,
                                cross_attention_dim = 768,)
-    model.to(device)
     inferer = DiffusionInferer(scheduler)
 
     print(f' step 4. optimizer')
