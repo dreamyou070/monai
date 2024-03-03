@@ -84,12 +84,8 @@ def main(args):
                 
                 b = image.shape[0]
                 #for i, im in enumerate(intermediates) :
-                img = image[0].squeeze()
-                print(f'img : {img.shape}')
-                pil = torch_to_pil(img)
-
+                pil = torch_to_pil(image[0].squeeze())
                 save_name = os.path.join(inference_dir, f'inference_epoch_{epoch}_condition_{defect}_{img}')
-                print(f'save_name = {save_name}')
                 pil.save(save_name)
 
 
