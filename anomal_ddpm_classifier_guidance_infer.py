@@ -38,7 +38,7 @@ def main(args):
         model.to(device)
 
         # [2] for generation
-        noise = torch.randn((1, 1, 64, 64)).to(device)
+        noise = torch.randn((1, 3, 64, 64)).to(device)
 
         # [3] generation test
         image, intermediates = inferer.sample(input_noise=noise,
