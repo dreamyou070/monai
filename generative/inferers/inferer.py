@@ -97,7 +97,7 @@ class DiffusionInferer(Inferer):
             scheduler: diffusion scheduler. If none provided will use the class attribute scheduler
             save_intermediates: whether to return intermediates along the sampling change
             intermediate_steps: if save_intermediates is True, saves every n steps
-            conditioning: Conditioning for network input.
+            conditioning: Conditioning for network input. (input image condition... ?)
             mode: Conditioning mode for the network.
             verbose: if true, prints the progression bar of the sampling process.
             seg: if diffusion model is instance of SPADEDiffusionModel, segmentation must be provided.
@@ -115,22 +115,22 @@ class DiffusionInferer(Inferer):
         intermediates = []
         for t in progress_bar:
             # 1. predict noise model_output
-            diffusion_model = (
-                partial(diffusion_model, seg=seg)
-                if isinstance(diffusion_model, SPADEDiffusionModelUNet)
-                else diffusion_model
-            )
+            diffusion_model = (partial(diffusion_model, seg=seg)
+                               if isinstance(diffusion_model, SPADEDiffusionModelUNet)
+                               else diffusion_model)
+
             if mode == "concat":
                 model_input = torch.cat([image, conditioning], dim=1)
-                model_output = diffusion_model(
-                    model_input, timesteps=torch.Tensor((t,)).to(input_noise.device), context=None
-                )
+                model_output = diffusion_model(model_input,
+                                               timesteps=torch.Tensor((t,)).to(input_noise.device),
+                                               context=None)
             else:
-                model_output = diffusion_model(
-                    image, timesteps=torch.Tensor((t,)).to(input_noise.device), context=conditioning
-                )
-
-            # 2. compute previous image: x_t -> x_t-1
+                """ type of model_output """
+                model_output = diffusion_model(image,
+                                               timesteps=torch.Tensor((t,)).to(input_noise.device),
+                                               context=conditioning)
+            # 2. compute previous image: x_t -> x_t-1 (iteratively)
+            # pred_prev_sample, pred_original_sample
             image, _ = scheduler.step(model_output, t, image)
             if save_intermediates and t % intermediate_steps == 0:
                 intermediates.append(image)
