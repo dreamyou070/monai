@@ -49,7 +49,13 @@ def main(args):
     for file in files :
         file_name, ext = os.path.splitext(file)
         epoch = file_name.split('_')[-1]
-        model.load_state_dict(torch.load(os.path.join(model_file, file)))
+        saved_state_dict = torch.load(os.path.join(model_file, file))
+        org_state_dict = model.state_dict()
+        for k in saved_state_dict.keys() :
+            print(f'saved {k}')
+        for k in org_state_dict :
+            print(f'origin {k}')
+
         model.to(device)
 
         # [2] for generation
