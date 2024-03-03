@@ -119,19 +119,19 @@ def main(args):
                 model_output = model(current_img, timesteps=torch.Tensor((t,)).to(current_img.device)).detach()  # this is supposed to be epsilon
             with torch.enable_grad():
                 x_in = current_img.detach().requires_grad_(True)
-
                 # generate probability (batch, 2) -> what is 2 means ?
                 logits = classifier(x_in, timesteps=torch.Tensor((t,)).to(current_img.device))
                 log_probs = F.log_softmax(logits, dim=-1)
                 print(f'log_probs = {log_probs}')
-                selected = log_probs[range(len(logits)), y.view(-1)]
-
+                selected = log_probs[range(len(logits)), y.view(-1)] # select the first one
                 print(f'selected = {selected}')
-                a = torch.autograd.grad(selected.sum(), x_in)[0]
+                a = torch.autograd.grad(selected.sum(), x_in)[0] # scaling following score
                 alpha_prod_t = scheduler.alphas_cumprod[t]
                 updated_noise = (model_output - (1 - alpha_prod_t).sqrt() * scale * a)  # update the predicted noise epsilon with the gradient of the classifier
         # [4] next step predicting
-        current_img, _ = scheduler.step(updated_noise, t, current_img)
+        current_img, _ = scheduler.step(updated_noise,
+                                        t,
+                                        current_img)
         torch.cuda.empty_cache()
 
 
