@@ -48,7 +48,7 @@ def main(args):
                                               intermediate_steps=100)
 
         # [4] save image (pillow)
-        print(f'image type = {type(image)}')
+        print(f'image type = {image.shape}')
 
 
 if __name__ == '__main__' :
