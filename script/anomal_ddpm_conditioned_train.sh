@@ -18,7 +18,7 @@ python ../anomal_ddpm_conditioned_train.py \
  --data_path "../../../MyData/anomaly_detection/${bench_mark}" \
  --trigger_word "${trigger_word}" \
  --obj_name "${obj_name}" --anomal_only_on_object \
- --anomal_source_path "${anomal_source_path}" \
+ --anomal_source_path "/home/dreamyou070/MyData/anomal_source" \
  --anomal_min_perlin_scale 0 \
  --anomal_max_perlin_scale 6 \
  --anomal_min_beta_scale 0.5 \
