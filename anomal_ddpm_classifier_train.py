@@ -119,12 +119,13 @@ def main(args):
                 model_output = model(current_img, timesteps=torch.Tensor((t,)).to(current_img.device)).detach()  # this is supposed to be epsilon
             with torch.enable_grad():
                 x_in = current_img.detach().requires_grad_(True)
-                # generate probability
-                logits = classifier(x_in,
-                                    timesteps=torch.Tensor((t,)).to(current_img.device))
+
+                # generate probability (batch, 2) -> what is 2 means ?
+                logits = classifier(x_in, timesteps=torch.Tensor((t,)).to(current_img.device))
                 log_probs = F.log_softmax(logits, dim=-1)
-                print(f'log_probs : {log_probs.shape}')
+                print(f'log_probs = {log_probs}')
                 selected = log_probs[range(len(logits)), y.view(-1)]
+
                 print(f'selected = {selected}')
                 a = torch.autograd.grad(selected.sum(), x_in)[0]
                 alpha_prod_t = scheduler.alphas_cumprod[t]
