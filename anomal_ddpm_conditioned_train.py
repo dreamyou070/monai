@@ -111,6 +111,8 @@ if __name__ == '__main__' :
     parser.add_argument("--do_anomal_sample", action='store_true')
     parser.add_argument("--do_object_detection", action='store_true')
     parser.add_argument('--batch_size', type=int, default=1)
+    parser.add_argument("--mixed_precision", type=str, default="no", choices=["no", "fp16", "bf16"], )
+    parser.add_argument("--save_precision", type=str, default=None, choices=[None, "float", "fp16", "bf16"], )
     parser.add_argument("--gradient_accumulation_steps", type=int, default=1, )
     parser.add_argument("--log_with", type=str, default=None, choices=["tensorboard", "wandb", "all"], )
     parser.add_argument("--log_prefix", type=str, default=None)
