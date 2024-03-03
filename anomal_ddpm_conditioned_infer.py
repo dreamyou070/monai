@@ -19,6 +19,7 @@ def torch_to_pil(torch_img):
 
 clip_model = CLIPVisionModel.from_pretrained("openai/clip-vit-base-patch32")
 clip_processor = AutoProcessor.from_pretrained("openai/clip-vit-base-patch32")
+
 def main(args):
 
     print(f' step 0. setting and file')
