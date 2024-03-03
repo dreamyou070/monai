@@ -12,6 +12,7 @@ from PIL import Image
 
 def torch_to_pil(torch_img):
     # torch_img = [3, H, W], from -1 to 1
+    torch_img = torch_img.detach().cpu()
     np_img = np.array(((torch_img + 1) / 2) * 255).astype(np.uint8).transpose(1, 2, 0)
     pil = Image.fromarray(np_img)
     return pil
