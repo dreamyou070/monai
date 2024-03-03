@@ -63,11 +63,11 @@ def main(args):
     args.max_train_steps = len(train_dataloader) * args.max_train_epochs
     progress_bar = tqdm(range(args.max_train_steps), smoothing=0, desc="steps")
     global_step = 0
-    scaler = GradScaler()
     loss_dict = {}
     for epoch in range(args.start_epoch, args.max_train_epochs + args.start_epoch):
         model.train()
         epoch_loss = 0
+        """
         for step, batch in enumerate(train_dataloader):
             optimizer.zero_grad(set_to_none=True)
             # [1] call image
@@ -92,6 +92,7 @@ def main(args):
                 global_step += 1
                 progress_bar.set_postfix(**loss_dict)
         # [2] save model per epoch
+        """
         if is_main_process :
             torch.save(model.state_dict(), os.path.join(model_base_dir, f'model_{epoch+1}.pth'))
 
