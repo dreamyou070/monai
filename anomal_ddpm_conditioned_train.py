@@ -85,7 +85,6 @@ def main(args):
 
             accelerator.backward(loss)
             optimizer.step()
-            scaler.update()
             epoch_loss += loss.item()
             # [3] progress bar
             if is_main_process :
