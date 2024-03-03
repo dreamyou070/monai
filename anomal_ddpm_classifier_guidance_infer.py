@@ -58,7 +58,7 @@ def main(args):
                                               intermediate_steps=100)
         b = image.shape[0]
         for b_idx in range(b) :
-            img = image[b].squeeze()
+            img = image[b_idx].squeeze()
             pil = torch_to_pil(img)
             pil.save(os.path.join(inference_dir, f'inference_epoch_{epoch}.png'))
 
