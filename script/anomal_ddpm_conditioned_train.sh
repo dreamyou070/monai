@@ -1,6 +1,6 @@
 # !/bin/bash
 
-port_number=50005
+port_number=50033
 bench_mark="MVTec"
 obj_name='transistor'
 trigger_word='transistor'
