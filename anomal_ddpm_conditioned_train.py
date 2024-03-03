@@ -32,7 +32,6 @@ def main(args):
 
     print(f' step 2. make dataset')
     train_dataloader = call_dataset(args, is_valid = False)
-    valid_dataloader = call_dataset(args, is_valid = True)
 
     print(f' step 3. model and scheduler')
     device = torch.device("cuda")

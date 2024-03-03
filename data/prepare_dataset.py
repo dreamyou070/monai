@@ -21,7 +21,6 @@ def call_dataset(args, is_valid) :
         from model.tokenizer import load_tokenizer
         tokenizer = load_tokenizer(args)
 
-    print(f'args.anomal_source_path : {args.anomal_source_path}')
 
     dataset = data_class(root_dir=root_dir,
                          anomaly_source_path=args.anomal_source_path,
