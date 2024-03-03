@@ -91,12 +91,14 @@ class MVTecDRAEMTrainDataset(Dataset):
         # [1] base image
         self.root_dir = root_dir
         image_paths = []
-        folder_path = os.path.join(root_dir, 'good')
-        rgb_folder = os.path.join(folder_path, "rgb")
-        images = os.listdir(rgb_folder)
-        for image in images:
-            image_path = os.path.join(rgb_folder, image)
-            image_paths.append(image_path)
+        folders = os.listdir(root_dir)
+        for folder in folders :
+            folder_path = os.path.join(root_dir, folder)
+            rgb_folder = os.path.join(folder_path, "rgb")
+            images = os.listdir(rgb_folder)
+            for image in images:
+                image_path = os.path.join(rgb_folder, image)
+                image_paths.append(image_path)
 
         self.resize_shape=resize_shape
         if do_anomal_sample :

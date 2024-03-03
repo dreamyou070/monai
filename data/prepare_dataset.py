@@ -3,13 +3,17 @@ from data.mvtec import MVTecDRAEMTrainDataset
 import torch
 
 
-def call_dataset(args) :
+def call_dataset(args, is_valid) :
 
     # [1] set root data
-    if args.do_object_detection :
-        root_dir = os.path.join(args.data_path, f'{args.obj_name}/train_object_detector')
-    else:
-        root_dir = os.path.join(args.data_path, f'{args.obj_name}/train')
+    if not is_valid :
+        if args.do_object_detection :
+            root_dir = os.path.join(args.data_path, f'{args.obj_name}/train_object_detector')
+        else:
+            root_dir = os.path.join(args.data_path, f'{args.obj_name}/train')
+    else :
+        root_dir = os.path.join(args.data_path, f'{args.obj_name}/test')
+        args.anomal_source_path = None
     data_class = MVTecDRAEMTrainDataset
 
     tokenizer = None
@@ -19,7 +23,7 @@ def call_dataset(args) :
 
     dataset = data_class(root_dir=root_dir,
                          anomaly_source_path=args.anomal_source_path,
-                         resize_shape=[256,256],
+                         resize_shape=[512,512],
                          tokenizer=tokenizer,
                          caption=args.trigger_word,
                          use_perlin=True,

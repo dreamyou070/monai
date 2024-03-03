@@ -803,7 +803,7 @@ class AttnDownBlock(nn.Module):
                     in_channels=in_channels,
                     out_channels=out_channels,
                     temb_channels=temb_channels,
-                    norm_num_groups=norm_num_groups,
+                    norm_num_groups=norm_num_groups, #
                     norm_eps=norm_eps,
                 )
             )
@@ -1451,7 +1451,7 @@ def get_down_block(
     resblock_updown: bool,
     with_attn: bool,
     with_cross_attn: bool,
-    num_head_channels: int,
+    num_head_channels: int, # 64
     transformer_num_layers: int,
     cross_attention_dim: int | None,
     upcast_attention: bool = False,
@@ -1469,7 +1469,7 @@ def get_down_block(
             norm_eps=norm_eps,
             add_downsample=add_downsample,
             resblock_updown=resblock_updown,
-            num_head_channels=num_head_channels,
+            num_head_channels=num_head_channels, # 64 res
             use_flash_attention=use_flash_attention,
         )
     elif with_cross_attn:
@@ -1641,8 +1641,8 @@ class DiffusionModelUNet(nn.Module):
         spatial_dims: int,
         in_channels: int,
         out_channels: int,
-        num_res_blocks: Sequence[int] | int = (2, 2, 2, 2),
-        num_channels: Sequence[int] = (32, 64, 64, 64),
+        num_res_blocks: Sequence[int] | int = (2, 2, 2, 2),                   # resnet blocks
+        num_channels: Sequence[int] = (32, 64, 64, 64),                       # what is num_channels ?
         attention_levels: Sequence[bool] = (False, False, True, True),
         norm_num_groups: int = 32,
         norm_eps: float = 1e-6,
@@ -1706,10 +1706,10 @@ class DiffusionModelUNet(nn.Module):
         self.in_channels = in_channels
         self.block_out_channels = num_channels
         self.out_channels = out_channels
-        self.num_res_blocks = num_res_blocks
-        self.attention_levels = attention_levels
-        self.num_head_channels = num_head_channels
-        self.with_conditioning = with_conditioning
+        self.num_res_blocks = num_res_blocks         # [2,2,2,2]
+        self.attention_levels = attention_levels     # (True, True, True)
+        self.num_head_channels = num_head_channels   # 8
+        self.with_conditioning = with_conditioning   # False
 
         # input : overlapping
         self.conv_in = Convolution(spatial_dims=spatial_dims, #
@@ -1724,7 +1724,9 @@ class DiffusionModelUNet(nn.Module):
 
         # time
         time_embed_dim = num_channels[0] * 4 # 512 dim
-        self.time_embed = nn.Sequential(nn.Linear(num_channels[0], time_embed_dim), nn.SiLU(), nn.Linear(time_embed_dim, time_embed_dim))
+        self.time_embed = nn.Sequential(nn.Linear(num_channels[0], time_embed_dim),
+                                        nn.SiLU(),
+                                        nn.Linear(time_embed_dim, time_embed_dim))
 
         # class embedding (no class embedding)
         self.num_class_embeds = num_class_embeds
@@ -1735,21 +1737,22 @@ class DiffusionModelUNet(nn.Module):
         self.down_blocks = nn.ModuleList([])
         output_channel = num_channels[0]
         for i in range(len(num_channels)):
-            input_channel = output_channel
-            output_channel = num_channels[i] # three times, always 64
-            is_final_block = i == len(num_channels) - 1
+            # i = 0, 1, 2
+            input_channel = output_channel   #
+            output_channel = num_channels[i] # 2three times, always 64
+            is_final_block = i == len(num_channels) - 1 #
             down_block = get_down_block(spatial_dims=spatial_dims,       # 2
                                         in_channels=input_channel,       # 64
                                         out_channels=output_channel,     # 64
                                         temb_channels=time_embed_dim,    # 512
-                                        num_res_blocks=num_res_blocks[i],  # 1
+                                        num_res_blocks=num_res_blocks[i],  # 2
                                         norm_num_groups=norm_num_groups,   #
                                         norm_eps=norm_eps,
                                         add_downsample=not is_final_block, # only final step
                                         resblock_updown=resblock_updown,   # False
                                         with_attn=(attention_levels[i] and not with_conditioning), # False
                                         with_cross_attn=(attention_levels[i] and with_conditioning),
-                                        num_head_channels=num_head_channels[i],
+                                        num_head_channels=num_head_channels[i], # 64, 64, 64
                                         transformer_num_layers=transformer_num_layers,
                                         cross_attention_dim=cross_attention_dim,
                                         upcast_attention=upcast_attention,
@@ -1765,7 +1768,7 @@ class DiffusionModelUNet(nn.Module):
             norm_num_groups=norm_num_groups,
             norm_eps=norm_eps,
             with_conditioning=with_conditioning,
-            num_head_channels=num_head_channels[-1],
+            num_head_channels=num_head_channels[-1], # 64
             transformer_num_layers=transformer_num_layers,
             cross_attention_dim=cross_attention_dim,
             upcast_attention=upcast_attention,
@@ -1807,18 +1810,15 @@ class DiffusionModelUNet(nn.Module):
             self.up_blocks.append(up_block)
 
         # out
-        self.out = nn.Sequential(
-            nn.GroupNorm(num_groups=norm_num_groups, num_channels=num_channels[0], eps=norm_eps, affine=True),
-            nn.SiLU(),
-            zero_module(
-                Convolution(
-                    spatial_dims=spatial_dims,
-                    in_channels=num_channels[0],
-                    out_channels=out_channels,
-                    strides=1,
-                    kernel_size=3,
-                    padding=1,
-                    conv_only=True,)),)
+        self.out = nn.Sequential(nn.GroupNorm(num_groups=norm_num_groups, num_channels=num_channels[0], eps=norm_eps, affine=True),
+                                 nn.SiLU(),
+                                 zero_module(Convolution(spatial_dims=spatial_dims,
+                                                         in_channels=num_channels[0],
+                                                         out_channels=out_channels,
+                                                         strides=1,
+                                                         kernel_size=3,
+                                                         padding=1,
+                                                         conv_only=True,)),)
 
     def forward(
         self,

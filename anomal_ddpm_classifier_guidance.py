@@ -31,20 +31,21 @@ def main(args):
     set_determinism(args.seed)
 
     print(f' step 2. make dataset')
-    train_dataloader = call_dataset(args)
+    train_dataloader = call_dataset(args, is_valid = False)
+    valid_dataloader = call_dataset(args, is_valid = True)
 
     print(f' step 3. model and scheduler')
     device = torch.device("cuda")
+    scheduler = DDIMScheduler(num_train_timesteps=1000)
     model = DiffusionModelUNet(spatial_dims=2,  # 2D Convolution
                                in_channels=3,   # input  RGB image
                                out_channels=3,  # output RGB image
-                               num_channels=(64, 64, 64),
+                               num_channels=(320, 640, 1280), # 512
                                attention_levels=(False, False, True),
-                               num_res_blocks=1,
+                               num_res_blocks=2,
                                num_head_channels=64, # what is num_head_channels?
                                with_conditioning=False,)
     model.to(device)
-    scheduler = DDIMScheduler(num_train_timesteps=1000)
     inferer = DiffusionInferer(scheduler)
 
     print(f' step 4. optimizer')
@@ -52,8 +53,7 @@ def main(args):
 
     print(f' step 5. Training')
     # [0] progress bar
-    max_train_steps = len(train_dataloader) * args.max_train_epochs
-    progress_bar = tqdm(range(max_train_steps), smoothing=0, desc="steps")
+    progress_bar = tqdm(range(args.max_train_steps), smoothing=0, desc="steps")
     global_step = 0
     scaler = GradScaler()
     loss_dict = {}
