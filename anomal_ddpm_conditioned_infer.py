@@ -79,7 +79,8 @@ def main(args):
                                                       scheduler=scheduler,
                                                       save_intermediates=True,
                                                       intermediate_steps=100,
-                                                      condition = condition)
+                                                      conditioning = condition,
+                                                      mode="crossattn")
                 b = image.shape[0]
                 #for i, im in enumerate(intermediates) :
                 img = image[0].squeeze()
