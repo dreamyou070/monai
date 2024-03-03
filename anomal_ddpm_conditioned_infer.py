@@ -51,11 +51,9 @@ def main(args):
         epoch = file_name.split('_')[-1]
         saved_state_dict = torch.load(os.path.join(model_file, file))
         org_state_dict = model.state_dict()
-        for k in saved_state_dict.keys() :
-            print(f'saved {k}')
         for k in org_state_dict :
-            print(f'origin {k}')
-
+            org_state_dict[k] = saved_state_dict[f'module.{k}']
+        model.load_state_dict(org_state_dict)
         model.to(device)
 
         # [2] for generation
