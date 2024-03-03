@@ -102,6 +102,7 @@ class MVTecDRAEMTrainDataset(Dataset):
 
         self.resize_shape=resize_shape
         if do_anomal_sample :
+            print(f'in class, anomaly_source_path : {anomaly_source_path}')
             assert anomaly_source_path is not None, "anomaly_source_path should be given"
 
         if anomaly_source_path is not None:
