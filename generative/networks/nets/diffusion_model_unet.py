@@ -1658,10 +1658,9 @@ class DiffusionModelUNet(nn.Module):
     ) -> None:
         super().__init__()
         if with_conditioning is True and cross_attention_dim is None:
-            raise ValueError(
-                "DiffusionModelUNet expects dimension of the cross-attention conditioning (cross_attention_dim) "
-                "when using with_conditioning."
-            )
+            raise ValueError("DiffusionModelUNet expects dimension of the cross-attention conditioning (cross_attention_dim) "
+                "when using with_conditioning.")
+
         if cross_attention_dim is not None and with_conditioning is False:
             raise ValueError(
                 "DiffusionModelUNet expects with_conditioning=True when specifying the cross_attention_dim."

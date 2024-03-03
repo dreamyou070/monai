@@ -23,7 +23,7 @@ def call_dataset(args, is_valid) :
 
     dataset = data_class(root_dir=root_dir,
                          anomaly_source_path=args.anomal_source_path,
-                         resize_shape=[512,512],
+                         resize_shape=[256,256],
                          tokenizer=tokenizer,
                          caption=args.trigger_word,
                          use_perlin=True,
