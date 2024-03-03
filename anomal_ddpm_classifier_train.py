@@ -110,7 +110,7 @@ def main(args):
     scale = 6  # define the desired gradient scale s
     L = 200
     progress_bar = tqdm(range(L))  # go back and forth L timesteps
-    current_img = torch.randn(1,3,64,64)
+    current_img = torch.randn(1,3,64,64).to(device)
     for i in progress_bar:  # go through the denoising process
         t = L - i
         with autocast(enabled=True):
