@@ -4,7 +4,7 @@ port_number=50044
 bench_mark="MVTec"
 obj_name='transistor'
 trigger_word='transistor'
-file_name="monai_trial_ddpm_2"
+file_name="monai_trial_ddpm"
 
 anomal_source_path="../../../MyData/anomal_source"
 
