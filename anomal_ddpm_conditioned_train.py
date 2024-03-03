@@ -51,6 +51,7 @@ def main(args):
 
     print(f' step 5. prepare accelerator')
     from utils.accelerator_utils import prepare_accelerator
+    args.logging_dir = os.path.join(output_dir, 'logging')
     accelerator = prepare_accelerator(args)
     is_main_process = accelerator.is_main_process
 
