@@ -34,7 +34,6 @@ def main(args):
     train_dataloader = call_dataset(args, is_valid = False)
 
     print(f' step 3. model and scheduler')
-    device = torch.device("cuda")
     scheduler = DDIMScheduler(num_train_timesteps=1000)
     model = DiffusionModelUNet(spatial_dims=2,  # 2D Convolution
                                in_channels=3,   # input  RGB image
@@ -51,7 +50,15 @@ def main(args):
     print(f' step 4. optimizer')
     optimizer = torch.optim.Adam(params=model.parameters(), lr=2.5e-5)
 
-    print(f' step 5. Training')
+    print(f' step 5. prepare accelerator')
+    from utils.accelerator_utils import prepare_accelerator
+    accelerator = prepare_accelerator(args)
+    is_main_process = accelerator.is_main_process
+
+    print(f' step 6. model to accelerator')
+    train_dataloader, model, optimizer = accelerator.prepare(train_dataloader, model, optimizer)
+
+    print(f' step 7. Training')
     # [0] progress bar
     args.max_train_steps = len(train_dataloader) * args.max_train_epochs
     progress_bar = tqdm(range(args.max_train_steps), smoothing=0, desc="steps")
@@ -64,30 +71,30 @@ def main(args):
         for step, batch in enumerate(train_dataloader):
             optimizer.zero_grad(set_to_none=True)
             # [1] call image
-            image = batch['image'].to(device)
-
+            image = batch['image']
             # [2] condition
-            condition = batch['anomal_image'].to(device).to(image.dtype)  # why don't use generated image
-            timesteps = torch.randint(0, 1000, (len(image),)).to(device)  # pick a random time step t
+            condition = batch['anomal_image'].to(image.dtype)  # why don't use generated image
+            timesteps = torch.randint(0, 1000, (len(image),)).to(image.device)  # pick a random time step t
             with autocast(enabled=True):
-                noise = torch.randn_like(image).to(device)
+                noise = torch.randn_like(image).to(image.device)
                 # Get model prediction
                 noise_pred = inferer(inputs=image, diffusion_model=model, noise=noise, timesteps=timesteps,
                                      condition = condition)
-
-
                 loss = F.mse_loss(noise_pred.float(), noise.float())
                 loss_dict['loss'] = loss
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
+
+            accelerator.backward(loss)
+            optimizer.step()
             scaler.update()
             epoch_loss += loss.item()
             # [3] progress bar
-            progress_bar.update(1)
-            global_step += 1
-            progress_bar.set_postfix(**loss_dict)
+            if is_main_process :
+                progress_bar.update(1)
+                global_step += 1
+                progress_bar.set_postfix(**loss_dict)
         # [2] save model per epoch
-        torch.save(model.state_dict(), os.path.join(model_base_dir, f'model_{epoch+1}.pth'))
+        if is_main_process :
+            torch.save(model.state_dict(), os.path.join(model_base_dir, f'model_{epoch+1}.pth'))
 
 
 if __name__ == '__main__' :
