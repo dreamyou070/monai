@@ -15,6 +15,9 @@ def call_dataset(args, is_valid) :
         root_dir = os.path.join(args.data_path, f'{args.obj_name}/test')
         args.anomal_source_path = None
     data_class = MVTecDRAEMTrainDataset
+    if args.clip_test :
+        from data.mvtec import MVTecClipTrainDataset
+        data_class = MVTecClipTrainDataset
 
     tokenizer = None
     if not args.on_desktop :

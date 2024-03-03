@@ -65,7 +65,9 @@ def main(args):
             optimizer.zero_grad(set_to_none=True)
             # [1] call image
             image = batch['image'].to(device)
-            condition = torch.randn(1,50,768).to(device).to(image.dtype)  # why don't use generated image
+
+            # [2] condition
+            condition = batch['anomal_image'].to(device).to(image.dtype)  # why don't use generated image
             timesteps = torch.randint(0, 1000, (len(image),)).to(device)  # pick a random time step t
             with autocast(enabled=True):
                 noise = torch.randn_like(image).to(device)
@@ -121,6 +123,7 @@ if __name__ == '__main__' :
     parser.add_argument("--start_epoch", type=int, default=0)
     parser.add_argument("--max_train_epochs", type=int, default=None, )
     parser.add_argument("--on_desktop", action='store_true')
+    parser.add_argument("--clip_test", action='store_true')
     args = parser.parse_args()
     passing_mvtec_argument(args)
     main(args)

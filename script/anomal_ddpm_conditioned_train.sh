@@ -28,4 +28,4 @@ python ../anomal_ddpm_conditioned_train.py \
  --back_min_beta_scale 0.6 \
  --back_max_beta_scale 0.9 \
  --back_trg_beta 0 \
- --do_anomal_sample --do_object_detection
+ --do_anomal_sample --do_object_detection --clip_test
