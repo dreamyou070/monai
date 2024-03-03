@@ -74,6 +74,7 @@ def main(args):
                 noise = torch.randn((1, 3, 256, 256)).to(device)
 
                 # [3] generation test
+                """
                 image, intermediates = inferer.sample(input_noise=noise,
                                                       diffusion_model=model,
                                                       scheduler=scheduler,
@@ -81,11 +82,15 @@ def main(args):
                                                       intermediate_steps=100,
                                                       conditioning = condition.to(device),
                                                       mode="crossattn")
+                
                 b = image.shape[0]
                 #for i, im in enumerate(intermediates) :
                 img = image[0].squeeze()
                 pil = torch_to_pil(img)
-                pil.save(os.path.join(inference_dir, f'inference_epoch_{epoch}_condition_{defect}_{img}'))
+                """
+                save_name = os.path.join(inference_dir, f'inference_epoch_{epoch}_condition_{defect}_{img}')
+                print(f'save_name = {save_name}')
+                #pil.save(save_name)
 
 
 if __name__ == '__main__' :
