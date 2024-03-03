@@ -7,6 +7,14 @@ from generative.inferers import DiffusionInferer
 from generative.networks.nets.diffusion_model_unet import DiffusionModelUNet
 from generative.networks.schedulers.ddim import DDIMScheduler
 from data.mvtec import passing_mvtec_argument
+import numpy as np
+from PIL import Image
+
+def torch_to_pil(torch_img):
+    # torch_img = [3, H, W], from -1 to 1
+    np_img = np.array(((torch_img + 1) / 2) * 255).astype(np.uint8).transpose(1, 2, 0)
+    pil = Image.fromarray(np_img)
+    return pil
 
 def main(args):
 
@@ -34,6 +42,8 @@ def main(args):
     model_file = os.path.join(args.output_dir,'model')
     files = os.listdir(model_file)
     for file in files :
+        file_name, ext = os.path.splitext(file)
+        epoch = file_name.split('_')[-1]
         model.load_state_dict(torch.load(os.path.join(model_file, file)))
         model.to(device)
 
@@ -46,9 +56,12 @@ def main(args):
                                               scheduler=scheduler,
                                               save_intermediates=True,
                                               intermediate_steps=100)
+        b = image.shape[0]
+        for b_idx in range(b) :
+            img = image[b].squeeze()
+            pil = torch_to_pil(img)
+            pil.save(os.path.join(inference_dir, f'inference_epoch_{epoch}.png'))
 
-        # [4] save image (pillow)
-        print(f'image type = {image.shape}')
 
 
 if __name__ == '__main__' :
