@@ -111,7 +111,9 @@ if __name__ == '__main__' :
     parser.add_argument("--do_anomal_sample", action='store_true')
     parser.add_argument("--do_object_detection", action='store_true')
     parser.add_argument('--batch_size', type=int, default=1)
-
+    parser.add_argument("--log_with", type=str, default=None, choices=["tensorboard", "wandb", "all"], )
+    parser.add_argument("--log_prefix", type=str, default=None)
+    parser.add_argument("--lowram", action="store_true", )
     parser.add_argument("--anomal_p", type=float, default=0.04)
     parser.add_argument('--obj_name', type=str, default='bottle')
     parser.add_argument("--reference_check", action='store_true')
