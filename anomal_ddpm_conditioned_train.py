@@ -251,8 +251,6 @@ if __name__ == '__main__' :
     parser.add_argument("--start_epoch", type=int, default=0)
     parser.add_argument("--max_train_epochs", type=int, default=None, )
     parser.add_argument("--on_desktop", action='store_true')
-    parser.add_argument("--clip_test", action='store_true')
-    parser.add_argument("--clip_test", action='store_true')
     parser.add_argument('--learning_rate', type=float, default=1e-5)
     args = parser.parse_args()
     passing_mvtec_argument(args)
