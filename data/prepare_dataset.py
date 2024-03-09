@@ -15,7 +15,7 @@ def call_dataset(args) :
     print(f'root_dir = {root_dir}')
     dataset = TrainDataset(root_dir=root_dir,
                            anomaly_source_path=args.anomal_source_path,
-                           resize_shape=[512, 512],
+                           resize_shape=[256,256],
                            tokenizer=tokenizer,
                            caption=args.trigger_word,
                            latent_res=args.latent_res,)

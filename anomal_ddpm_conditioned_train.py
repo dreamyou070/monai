@@ -31,10 +31,10 @@ def main(args):
     set_determinism(args.seed)
 
     print(f' step 2. make dataset')
-    train_dataloader = call_dataset(args, is_valid = False)
+    train_dataloader = call_dataset(args)
 
     print(f' step 3. model and scheduler')
-    scheduler = DDIMScheduler(num_train_timesteps=1000)
+    #scheduler = DDIMScheduler(num_train_timesteps=1000)
     model = DiffusionModelUNet(spatial_dims=2,  # 2D Convolution
                                in_channels=3,   # input  RGB image
                                out_channels=3,  # output RGB image
@@ -46,12 +46,19 @@ def main(args):
                                cross_attention_dim = 768,)
     #inferer = DiffusionInferer(scheduler)
 
-    print(f' step 4. optimizer')
-    optimizer = torch.optim.Adam(params=model.parameters(), lr=2.5e-5)
 
     print(f' step 5. detection')
     anomal_detection = torch.nn.parameter.Parameter(data = torch.zeros(1,768),
                                                     requires_grad=True)
+    trainable_params = []
+    trainable_params.append({"params": model.parameters(), "lr": args.learning_rate})
+    trainable_params.append({"params": anomal_detection.parameters(), "lr": args.learning_rate})
+
+    print(f' step 4. optimizer')
+    optimizer = torch.optim.Adam(trainable_params)
+
+    # optimizer append
+
 
     print(f'\n step 9. registering saving tensor')
     from attention_store import AttentionStore
