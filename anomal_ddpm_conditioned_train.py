@@ -57,9 +57,6 @@ def main(args):
     print(f' step 4. optimizer')
     optimizer = torch.optim.Adam(trainable_params)
 
-    # optimizer append
-
-
     print(f'\n step 9. registering saving tensor')
     from attention_store import AttentionStore
     from attention_store.attention_control import register_attention_control
@@ -73,7 +70,9 @@ def main(args):
     is_main_process = accelerator.is_main_process
 
     print(f' step 6. model to accelerator')
-    train_dataloader, model, optimizer = accelerator.prepare(train_dataloader, model, optimizer)
+    train_dataloader, model, anomal_detection, optimizer = accelerator.prepare(train_dataloader, model,
+                                                                               anomal_detection,
+                                                                               optimizer)
 
     print(f' step 7. Training')
     # [0] progress bar
@@ -154,6 +153,8 @@ if __name__ == '__main__' :
     parser.add_argument("--max_train_epochs", type=int, default=None, )
     parser.add_argument("--on_desktop", action='store_true')
     parser.add_argument("--clip_test", action='store_true')
+    parser.add_argument("--clip_test", action='store_true')
+    parser.add_argument('--learning_rate', type=float, default=1e-5)
     args = parser.parse_args()
     passing_mvtec_argument(args)
     main(args)
