@@ -18,12 +18,8 @@ accelerate launch --config_file ../../../gpu_config/gpu_0_config \
  --trigger_word "${trigger_word}" \
  --obj_name "${obj_name}" --anomal_only_on_object \
  --anomal_source_path "${anomal_source_path}" \
- --anomal_min_perlin_scale 0 \
- --anomal_max_perlin_scale 6 \
- --anomal_min_beta_scale 0.5 \
- --anomal_max_beta_scale 0.8 \
- --back_min_perlin_scale 0 \
- --back_max_perlin_scale 6 \
- --back_min_beta_scale 0.6 \
- --back_max_beta_scale 0.9 \
- --back_trg_beta 0
+ --min_perlin_scale 1 \
+ --max_perlin_scale 4 \
+ --max_beta_scale 0.9 \
+ --min_beta_scale 0.5 \
+ --do_self_aug
