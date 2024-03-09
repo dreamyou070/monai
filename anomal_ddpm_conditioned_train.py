@@ -118,7 +118,7 @@ def main(args):
             anomal_detection = anomal_detection.unsqueeze(0).repeat(b_size, 1, 1)
             with autocast(enabled=True):
                 model(x= image,
-                      timesteps=0,
+                      timesteps=torch.Tensor([0]),
                       context = anomal_detection,
                       down_block_additional_residuals = None,
                       mid_block_additional_residual  = None)
