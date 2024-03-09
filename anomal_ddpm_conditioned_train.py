@@ -104,6 +104,8 @@ def main(args):
             optimizer.zero_grad(set_to_none=True)
             # [1] call image
             image = batch['image']
+            gt = batch['gt']
+            anomal_position_vector = gt.squeeze().flatten()
             b_size = image.shape[0]
             # [2] condition
             anomal_detection = anomal_detection.unsqueeze(0).repeat(b_size, 1, 1)
@@ -139,22 +141,77 @@ def main(args):
                                                           1 - anomal_position_vector, True)
             normal_activator.collect_anomal_map_loss(local_attn, anomal_position_vector, )
 
+            # [5] backprop
+            if args.do_attn_loss:
+                normal_cls_loss, normal_trigger_loss, anomal_cls_loss, anomal_trigger_loss = normal_activator.generate_attention_loss()
+                if type(anomal_cls_loss) == float:
+                    attn_loss = args.normal_weight * normal_trigger_loss.mean()
+                else:
+                    attn_loss = args.normal_weight * normal_cls_loss.mean() + args.anomal_weight * anomal_cls_loss.mean()
+                if args.do_cls_train:
+                    if type(anomal_trigger_loss) == float:
+                        attn_loss = args.normal_weight * normal_cls_loss.mean()
+                    else:
+                        attn_loss += args.normal_weight * normal_cls_loss.mean() + args.anomal_weight * anomal_cls_loss.mean()
+                loss += attn_loss
+                loss_dict['attn_loss'] = attn_loss.item()
 
+            if args.do_map_loss:
+                map_loss = normal_activator.generate_anomal_map_loss()
+                loss += map_loss
+                loss_dict['map_loss'] = map_loss.item()
 
+            if args.test_noise_predicting_task_loss:
+                noise_pred_loss = normal_activator.generate_noise_prediction_loss()
+                loss += noise_pred_loss
+                loss_dict['noise_pred_loss'] = noise_pred_loss.item()
 
-            #accelerator.backward(loss)
-            #optimizer.step()
-            #epoch_loss += loss.item()
-            # [3] progress bar
-            if is_main_process :
+            """
+            loss = loss.to(weight_dtype)
+            current_loss = loss.detach().item()
+            if epoch == args.start_epoch:
+                loss_list.append(current_loss)
+            else:
+                epoch_loss_total -= loss_list[step]
+                loss_list[step] = current_loss
+            epoch_loss_total += current_loss
+            avr_loss = epoch_loss_total / len(loss_list)
+            loss_dict['avr_loss'] = avr_loss
+            loss_dict['sample'] = batch['is_ok']  # if 1 = normal sample, if 0 = anormal sample
+            accelerator.backward(loss)
+            optimizer.step()
+            lr_scheduler.step()
+            optimizer.zero_grad(set_to_none=True)
+            if accelerator.sync_gradients:
                 progress_bar.update(1)
                 global_step += 1
+            if is_main_process:
                 progress_bar.set_postfix(**loss_dict)
-        # [2] save model per epoch
-
-        if is_main_process :
-            torch.save(model.state_dict(), os.path.join(model_base_dir, f'model_{epoch+1}.pth'))
-
+            normal_activator.reset()
+            if global_step >= args.max_train_steps:
+                break
+            # ----------------------------------------------------------------------------------------------------------- #
+            # [6] epoch final
+            """
+        """
+        accelerator.wait_for_everyone()
+        if is_main_process:
+            ckpt_name = get_epoch_ckpt_name(args, "." + args.save_model_as, epoch + 1)
+            save_model(args, ckpt_name, accelerator.unwrap_model(network), save_dtype)
+            if position_embedder is not None:
+                position_embedder_base_save_dir = os.path.join(args.output_dir, 'position_embedder')
+                os.makedirs(position_embedder_base_save_dir, exist_ok=True)
+                p_save_dir = os.path.join(position_embedder_base_save_dir,
+                                          f'position_embedder_{epoch + 1}.safetensors')
+                pe_model_save(accelerator.unwrap_model(position_embedder), save_dtype, p_save_dir)
+            if global_network is not None:
+                global_network_base_save_dir = os.path.join(args.output_dir, 'global_network')
+                os.makedirs(global_network_base_save_dir, exist_ok=True)
+                pe_model_save(accelerator.unwrap_model(global_network),
+                              save_dtype,
+                              os.path.join(global_network_base_save_dir, f'global_network_{epoch + 1}.safetensors'))
+        """
+    #accelerator.end_training()
 
 if __name__ == '__main__' :
     parser = argparse.ArgumentParser(description='Anomal DDPM')
