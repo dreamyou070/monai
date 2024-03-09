@@ -79,7 +79,7 @@ def main(args):
     print(f'\n step 7. loss function')
     loss_focal = None
     loss_l2 = torch.nn.modules.loss.MSELoss(reduction='none')
-    normal_activator = NormalActivator(loss_focal, loss_l2, args.use_focal_loss)
+    normal_activator = NormalActivator(loss_focal, loss_l2)
 
     print(f' step 7. Training')
     def resize_query_features(query):

@@ -9,7 +9,7 @@ def passing_normalize_argument(args):
 
 class NormalActivator(nn.Module):
 
-    def __init__(self, loss_focal, loss_l2, use_focal_loss):
+    def __init__(self, loss_focal, loss_l2):
         super(NormalActivator, self).__init__()
 
         # [1]
@@ -27,7 +27,7 @@ class NormalActivator(nn.Module):
         self.loss_focal = loss_focal
         self.loss_l2 = loss_l2
         self.anomal_map_loss = []
-        self.use_focal_loss = use_focal_loss
+        #self.use_focal_loss = use_focal_loss
         # [4]
         self.normal_matching_query_loss = []
         self.resized_queries = []
@@ -115,6 +115,7 @@ class NormalActivator(nn.Module):
 
     def collect_anomal_map_loss(self, attn_score, anomal_position_vector):
 
+        """
         if self.use_focal_loss:
 
             cls_score, trigger_score = attn_score.chunk(2, dim=-1)
@@ -128,15 +129,15 @@ class NormalActivator(nn.Module):
             focal_loss_trg = anomal_position_vector.view(res, res).unsqueeze(0).unsqueeze(0)
             map_loss = self.loss_focal(focal_loss_in,
                                        focal_loss_trg.to(dtype=trigger_score.dtype))
-
-        else:
-            cls_score, trigger_score = attn_score.chunk(2, dim=-1)  # [head,pixel], [head,pixel]
-            cls_score, trigger_score = cls_score.squeeze(), trigger_score.squeeze()  # [head,pixel], [head,pixel]
-            cls_score, trigger_score = cls_score.mean(dim=0), trigger_score.mean(dim=0)  # pix_num
-            """ trigger score should be normal position """
-            trg_trigger_score = 1 - anomal_position_vector
-            map_loss = self.loss_l2(trigger_score.float(),
-                                    trg_trigger_score.float())
+        """
+        #else:
+        cls_score, trigger_score = attn_score.chunk(2, dim=-1)  # [head,pixel], [head,pixel]
+        cls_score, trigger_score = cls_score.squeeze(), trigger_score.squeeze()  # [head,pixel], [head,pixel]
+        cls_score, trigger_score = cls_score.mean(dim=0), trigger_score.mean(dim=0)  # pix_num
+        """ trigger score should be normal position """
+        trg_trigger_score = 1 - anomal_position_vector
+        map_loss = self.loss_l2(trigger_score.float(),
+                                trg_trigger_score.float())
         self.anomal_map_loss.append(map_loss)
 
     def collect_noise_prediction_loss(self, noise_pred, noise, anomal_position_vector):
