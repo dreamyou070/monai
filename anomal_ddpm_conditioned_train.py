@@ -5,6 +5,8 @@ from data.prepare_dataset import call_dataset
 import os
 import torch
 import json
+from torch import nn
+from attention_store.normal_activator import NormalActivator
 import torch.nn.functional as F
 from torch.cuda.amp import GradScaler, autocast
 from generative.inferers import DiffusionInferer
@@ -74,7 +76,22 @@ def main(args):
                                                                                anomal_detection,
                                                                                optimizer)
 
+    print(f'\n step 7. loss function')
+    loss_focal = None
+    loss_l2 = torch.nn.modules.loss.MSELoss(reduction='none')
+    normal_activator = NormalActivator(loss_focal, loss_l2, args.use_focal_loss)
+
     print(f' step 7. Training')
+    def resize_query_features(query):
+
+        head_num, pix_num, dim = query.shape
+        res = int(pix_num ** 0.5)  # 8
+        query_map = query.view(head_num, res, res, dim).permute(0, 3, 1, 2).contiguous()  # 1, channel, res, res
+        resized_query_map = nn.functional.interpolate(query_map, size=(64, 64), mode='bilinear')  # 1, channel, 64,  64
+        resized_query = resized_query_map.permute(0, 2, 3, 1).contiguous().squeeze()  # head, 64, 64, channel
+        resized_query = resized_query.view(head_num, 64 * 64, dim)  # 8, 64*64, dim
+        return resized_query
+
     # [0] progress bar
     args.max_train_steps = len(train_dataloader) * args.max_train_epochs
     progress_bar = tqdm(range(args.max_train_steps), smoothing=0, desc="steps")
@@ -83,7 +100,6 @@ def main(args):
     for epoch in range(args.start_epoch, args.max_train_epochs + args.start_epoch):
         model.train()
         epoch_loss = 0
-
         for step, batch in enumerate(train_dataloader):
             optimizer.zero_grad(set_to_none=True)
             # [1] call image
@@ -97,6 +113,32 @@ def main(args):
                       context = anomal_detection,
                       down_block_additional_residuals = None,
                       mid_block_additional_residual  = None)
+            query_dict, key_dict, attn_dict = controller.query_dict, controller.key_dict, controller.attn_dict
+            controller.reset()
+            attn_list, origin_query_list, query_list, key_list = [], [], [], []
+            for layer in args.trg_layer_list:
+                query = query_dict[layer][0].squeeze()  # head, pix_num, dim
+                origin_query_list.append(query)  # head, pix_num, dim
+                query_list.append(resize_query_features(query))  # head, pix_num, dim
+                key_list.append(key_dict[layer][0])  # head, pix_num, dim
+                # attn_list.append(attn_dict[layer][0])
+            # [1] local
+            local_query = torch.cat(query_list, dim=-1)  # head, pix_num, long_dim
+            local_key = torch.cat(key_list, dim=-1).squeeze()  # head, 77, long_dim
+            # learnable weight ?
+            # local_query = [8, 64*64, 280] = [64*64, 2240]
+            attention_scores = torch.baddbmm(
+                torch.empty(local_query.shape[0], local_query.shape[1], local_key.shape[1], dtype=query.dtype,
+                            device=query.device), local_query, local_key.transpose(-1, -2), beta=0, )
+            local_attn = attention_scores.softmax(dim=-1)[:, :, :2]
+            if args.normal_activating_test:
+                normal_activator.collect_attention_scores(local_attn, anomal_position_vector,  # anomal position
+                                                          1 - anomal_position_vector, False)
+            else:
+                normal_activator.collect_attention_scores(local_attn, anomal_position_vector,  # anomal position
+                                                          1 - anomal_position_vector, True)
+            normal_activator.collect_anomal_map_loss(local_attn, anomal_position_vector, )
+
 
 
 

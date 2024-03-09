@@ -26,5 +26,4 @@ accelerate launch --config_file ../../../gpu_config/gpu_0_config \
  --back_max_perlin_scale 6 \
  --back_min_beta_scale 0.6 \
  --back_max_beta_scale 0.9 \
- --back_trg_beta 0 \
- --do_anomal_sample --do_object_detection --clip_test
+ --back_trg_beta 0
