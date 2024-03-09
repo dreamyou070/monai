@@ -54,7 +54,7 @@ def main(args):
                                                     requires_grad=True)
     trainable_params = []
     trainable_params.append({"params": model.parameters(), "lr": args.learning_rate})
-    trainable_params.append({"params": anomal_detection.parameters(), "lr": args.learning_rate})
+    trainable_params.append({"params": anomal_detection, "lr": args.learning_rate})
 
     print(f' step 4. optimizer')
     optimizer = torch.optim.Adam(trainable_params)
@@ -97,9 +97,16 @@ def main(args):
     progress_bar = tqdm(range(args.max_train_steps), smoothing=0, desc="steps")
     global_step = 0
     loss_dict = {}
+    loss_list = []
+    weight_dtype = torch.float32
     for epoch in range(args.start_epoch, args.max_train_epochs + args.start_epoch):
+
         model.train()
-        epoch_loss = 0
+        epoch_loss_total = 0
+        device = accelerator.device
+        loss = torch.tensor(0.0, dtype=weight_dtype, device=accelerator.device)
+        loss_dict = {}
+
         for step, batch in enumerate(train_dataloader):
             optimizer.zero_grad(set_to_none=True)
             # [1] call image
@@ -166,7 +173,7 @@ def main(args):
                 loss += noise_pred_loss
                 loss_dict['noise_pred_loss'] = noise_pred_loss.item()
 
-            """
+
             loss = loss.to(weight_dtype)
             current_loss = loss.detach().item()
             if epoch == args.start_epoch:
@@ -180,7 +187,7 @@ def main(args):
             loss_dict['sample'] = batch['is_ok']  # if 1 = normal sample, if 0 = anormal sample
             accelerator.backward(loss)
             optimizer.step()
-            lr_scheduler.step()
+            #lr_scheduler.step()
             optimizer.zero_grad(set_to_none=True)
             if accelerator.sync_gradients:
                 progress_bar.update(1)
@@ -192,25 +199,20 @@ def main(args):
                 break
             # ----------------------------------------------------------------------------------------------------------- #
             # [6] epoch final
-            """
-        """
+
         accelerator.wait_for_everyone()
-        if is_main_process:
-            ckpt_name = get_epoch_ckpt_name(args, "." + args.save_model_as, epoch + 1)
-            save_model(args, ckpt_name, accelerator.unwrap_model(network), save_dtype)
+        #if is_main_process:
+            #ckpt_name = get_epoch_ckpt_name(args, "." + args.save_model_as, epoch + 1)
+            #save_model(args, ckpt_name, accelerator.unwrap_model(network), save_dtype)
+            """
             if position_embedder is not None:
                 position_embedder_base_save_dir = os.path.join(args.output_dir, 'position_embedder')
                 os.makedirs(position_embedder_base_save_dir, exist_ok=True)
                 p_save_dir = os.path.join(position_embedder_base_save_dir,
                                           f'position_embedder_{epoch + 1}.safetensors')
                 pe_model_save(accelerator.unwrap_model(position_embedder), save_dtype, p_save_dir)
-            if global_network is not None:
-                global_network_base_save_dir = os.path.join(args.output_dir, 'global_network')
-                os.makedirs(global_network_base_save_dir, exist_ok=True)
-                pe_model_save(accelerator.unwrap_model(global_network),
-                              save_dtype,
-                              os.path.join(global_network_base_save_dir, f'global_network_{epoch + 1}.safetensors'))
-        """
+            """
+
     #accelerator.end_training()
 
 if __name__ == '__main__' :
