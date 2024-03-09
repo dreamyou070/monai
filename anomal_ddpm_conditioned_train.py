@@ -40,7 +40,7 @@ def main(args):
     model = DiffusionModelUNet(spatial_dims=2,  # 2D Convolution
                                in_channels=3,   # input  RGB image
                                out_channels=3,  # output RGB image
-                               num_channels=(64, 128, 256), # 512
+                               num_channels=(64, 64, 128), # 512
                                attention_levels=(True, True, True),
                                num_res_blocks=2,
                                num_head_channels=64, # what is num_head_channels?
