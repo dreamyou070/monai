@@ -1,44 +1,26 @@
 import os
-from data.mvtec import MVTecDRAEMTrainDataset
+from data.dataset import TrainDataset
 import torch
 
 
-def call_dataset(args, is_valid) :
+def call_dataset(args) :
 
     # [1] set root data
-    if not is_valid :
-        if args.do_object_detection :
-            root_dir = os.path.join(args.data_path, f'{args.obj_name}/train_object_detector')
-        else:
-            root_dir = os.path.join(args.data_path, f'{args.obj_name}/train')
-    else :
-        root_dir = os.path.join(args.data_path, f'{args.obj_name}/test')
-        args.anomal_source_path = None
-    data_class = MVTecDRAEMTrainDataset
-    if args.clip_test :
-        from data.mvtec import MVTecClipTrainDataset
-        data_class = MVTecClipTrainDataset
+    root_dir = os.path.join(args.data_path, f'{args.obj_name}/train')
 
     tokenizer = None
     if not args.on_desktop :
         from model.tokenizer import load_tokenizer
         tokenizer = load_tokenizer(args)
-
-
-    dataset = data_class(root_dir=root_dir,
-                         anomaly_source_path=args.anomal_source_path,
-                         resize_shape=[256,256],
-                         tokenizer=tokenizer,
-                         caption=args.trigger_word,
-                         use_perlin=True,
-                         anomal_only_on_object=args.anomal_only_on_object,
-                         anomal_training=True,
-                         latent_res=args.latent_res,
-                         do_anomal_sample =args.do_anomal_sample,
-                         use_object_mask = args.do_object_detection,)
+    print(f'root_dir = {root_dir}')
+    dataset = TrainDataset(root_dir=root_dir,
+                           anomaly_source_path=args.anomal_source_path,
+                           resize_shape=[512, 512],
+                           tokenizer=tokenizer,
+                           caption=args.trigger_word,
+                           latent_res=args.latent_res,)
     dataloader = torch.utils.data.DataLoader(dataset,
                                              batch_size=args.batch_size,
                                              shuffle=True)
 
     return dataloader
-

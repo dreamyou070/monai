@@ -6,7 +6,7 @@ import torch
 from generative.inferers import DiffusionInferer
 from generative.networks.nets.diffusion_model_unet import DiffusionModelUNet
 from generative.networks.schedulers.ddim import DDIMScheduler
-from data.mvtec import passing_mvtec_argument
+from data.dataset import passing_mvtec_argument
 import numpy as np
 from PIL import Image
 

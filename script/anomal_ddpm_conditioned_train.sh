@@ -1,12 +1,12 @@
 # !/bin/bash
 
 port_number=50033
-bench_mark="MVTec"
-obj_name='transistor'
-trigger_word='transistor'
-file_name="monai_trial_ddpm_2"
+bench_mark="Tuft"
+obj_name='teeth_20240308'
+trigger_word='teeth'
+file_name="monai_trial_teeth"
 
-anomal_source_path="../../../MyData/anomal_source"
+anomal_source_path="../../../MyData/noise_source"
 
 # having anomal image only on object
 

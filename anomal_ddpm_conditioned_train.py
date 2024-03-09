@@ -10,7 +10,7 @@ from torch.cuda.amp import GradScaler, autocast
 from generative.inferers import DiffusionInferer
 from generative.networks.nets.diffusion_model_unet import DiffusionModelUNet
 from generative.networks.schedulers.ddim import DDIMScheduler
-from data.mvtec import passing_mvtec_argument
+from data.dataset import passing_mvtec_argument
 from tqdm import tqdm
 
 def main(args):
@@ -39,15 +39,25 @@ def main(args):
                                in_channels=3,   # input  RGB image
                                out_channels=3,  # output RGB image
                                num_channels=(128, 256, 256), # 512
-                               attention_levels=(False, False, True),
+                               attention_levels=(True, True, True),
                                num_res_blocks=2,
                                num_head_channels=64, # what is num_head_channels?
-                               with_conditioning=True,
+                               with_conditioning=True, # cross attention
                                cross_attention_dim = 768,)
-    inferer = DiffusionInferer(scheduler)
+    #inferer = DiffusionInferer(scheduler)
 
     print(f' step 4. optimizer')
     optimizer = torch.optim.Adam(params=model.parameters(), lr=2.5e-5)
+
+    print(f' step 5. detection')
+    anomal_detection = torch.nn.parameter.Parameter(data = torch.zeros(1,768),
+                                                    requires_grad=True)
+
+    print(f'\n step 9. registering saving tensor')
+    from attention_store import AttentionStore
+    from attention_store.attention_control import register_attention_control
+    controller = AttentionStore()
+    register_attention_control(model, controller)
 
     print(f' step 5. prepare accelerator')
     from utils.accelerator_utils import prepare_accelerator
@@ -67,32 +77,33 @@ def main(args):
     for epoch in range(args.start_epoch, args.max_train_epochs + args.start_epoch):
         model.train()
         epoch_loss = 0
-        """
+
         for step, batch in enumerate(train_dataloader):
             optimizer.zero_grad(set_to_none=True)
             # [1] call image
             image = batch['image']
+            b_size = image.shape[0]
             # [2] condition
-            condition = batch['anomal_image'].to(image.dtype)  # why don't use generated image
-            timesteps = torch.randint(0, 1000, (len(image),)).to(image.device)  # pick a random time step t
+            anomal_detection = anomal_detection.unsqueeze(0).repeat(b_size, 1, 1)
             with autocast(enabled=True):
-                noise = torch.randn_like(image).to(image.device)
-                # Get model prediction
-                noise_pred = inferer(inputs=image, diffusion_model=model, noise=noise, timesteps=timesteps,
-                                     condition = condition)
-                loss = F.mse_loss(noise_pred.float(), noise.float())
-                loss_dict['loss'] = loss
+                model(x= image,
+                      timestep=0,
+                      context = anomal_detection,
+                      down_block_additional_residuals = None,
+                      mid_block_additional_residual  = None)
 
-            accelerator.backward(loss)
-            optimizer.step()
-            epoch_loss += loss.item()
+
+
+            #accelerator.backward(loss)
+            #optimizer.step()
+            #epoch_loss += loss.item()
             # [3] progress bar
             if is_main_process :
                 progress_bar.update(1)
                 global_step += 1
                 progress_bar.set_postfix(**loss_dict)
         # [2] save model per epoch
-        """
+
         if is_main_process :
             torch.save(model.state_dict(), os.path.join(model_base_dir, f'model_{epoch+1}.pth'))
 
